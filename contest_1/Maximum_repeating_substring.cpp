@@ -43,9 +43,23 @@ int FindMaximumPeriod(const std::string &str) {
     return ans;
 }
 
+int FindMaximumRepeatingSubstring(const std::string &str) {
+    int ans = 1;
+    int len = static_cast<int>(str.length());
+    for (int begin = 0; begin < len; ++begin) {
+        for (int cur_len = 1; cur_len < len - begin; ++cur_len) {
+            int cur_val = FindMaximumPeriod(str.substr(begin, cur_len));
+            if (cur_val > ans) {
+                ans = cur_val;
+            }
+        }
+    }
+    return ans;
+}
+
 int main() {
     SetUp();
     std::string str;
     std::getline(std::cin, str);
-    std::cout << FindMaximumPeriod(str) << std::endl;
+    std::cout << FindMaximumRepeatingSubstring(str) << std::endl;
 }
