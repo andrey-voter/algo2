@@ -2,4 +2,3 @@
 cmake-build-debug
 cmake-build-asan
 cmake-build-release
-contest_1/tmp.cpp
