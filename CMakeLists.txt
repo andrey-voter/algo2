@@ -6,7 +6,7 @@ set(CMAKE_CXX_FLAGS_ASAN "-g -fsanitize=address,undefined -fno-sanitize-recover=
         CACHE STRING "Compiler flags in asan build"
         FORCE)
 
-file(GLOB_RECURSE SOURCES "contest_*/*.cpp")
+file(GLOB_RECURSE SOURCES "contest_*/*.cpp" "review/*.cpp")
 foreach (SOURCE ${SOURCES})
     get_filename_component(TARGET_NAME ${SOURCE} NAME_WE)
     add_executable(${TARGET_NAME} ${SOURCE})
