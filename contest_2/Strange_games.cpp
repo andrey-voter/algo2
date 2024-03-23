@@ -88,11 +88,10 @@ int main() {
         if (not num_questions) {
             std::cout << "$ " << cnt << std::endl;
             ++round_number;
-            if (round_number != mm) {
-                num_questions = 5;
-            } else {
+            if (round_number == mm) {
                 return 0;
             }
+            num_questions = 5;
         }
         if (round_number == mm) {
             std::cout << "$ " << cnt << std::endl;
