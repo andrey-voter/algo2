@@ -31,7 +31,7 @@ bool Ask(int idx1, int idx2, int nn, int &num_questions) {
     std::cout << sym1 << ' ' << idx1 << ' ' << sym2 << ' ' << idx2 << std::endl;
     std::string answer;
     std::cin >> answer;
-    if (answer == "YES") {
+    if (answer == "Yes") {
         return true;
     }
     return false;
@@ -65,6 +65,14 @@ int main() {
     int num_questions = 5;
     for (int index = 1; index < nn + mm + 1; ++index) {
         // ask questions
+        if (index > nn + round_number + 1) {
+            std::cout << "$ " << cnt << std::endl;
+            ++round_number;
+            if (round_number == mm) {
+                return 0;
+            }
+            num_questions = 5;
+        }
         int ii = pi[index - 1];
         bool step_res = CountStep(ii, index, num_questions, cnt, nn, pi);
         while (not step_res) {
