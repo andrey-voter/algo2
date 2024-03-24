@@ -1,6 +1,9 @@
 #include <iostream>
 #include <vector>
 #include <string>
+#include <unordered_map>
+
+void Reset(int &round_number, int &num_questions, int cnt, int m);
 
 void SetUp() {
     std::ios_base::sync_with_stdio(false);
@@ -8,95 +11,86 @@ void SetUp() {
     std::cout.tie(nullptr);
 }
 
-bool Ask(int idx1, int idx2, int nn, int &num_questions) {
-    if (idx1 == nn or idx2 == nn) {
+bool Ask(int idx1, int idx2, int n, int &num_questions, std::unordered_map<std::string, bool> &already_asked,
+         int &round_number, int &cnt, int m) {
+    if (idx1 == n or idx2 == n) {
         return false;
     }
-    --num_questions;
-    char sym1, sym2;
-    if (idx1 < nn) {
+    std::string sym1, sym2;
+    if (idx1 < n) {
         sym1 = 's';
         idx1 += 1;
     } else {
         sym1 = 't';
-        idx1 -= nn;
+        idx1 -= n;
     }
-    if (idx2 < nn) {
+    if (idx2 < n) {
         sym2 = 's';
         idx2 += 1;
     } else {
         sym2 = 't';
-        idx2 -= nn;
+        idx2 -= n;
     }
-    std::cout << sym1 << ' ' << idx1 << ' ' << sym2 << ' ' << idx2 << std::endl;
+    std::string question = sym1 + " " + std::to_string(idx1) + " " + sym2 + " " + std::to_string(idx2);
+    auto ans = already_asked.find(question);
+    if (ans != already_asked.end()) {
+        return ans->second;
+    }
+    if (not num_questions) {
+        Reset(round_number, num_questions, cnt, m);
+    }
+    --num_questions;
+    std::cout << question << std::endl;
     std::string answer;
     std::cin >> answer;
     if (answer == "Yes") {
+        already_asked[question] = true;
         return true;
     }
+    already_asked[question] = false;
     return false;
 }
 
-bool CountStep(int &ii, int &index, int &num_questions, int &cnt, int nn, std::vector<int> &pi) {
-    while (num_questions and ii > 0 and !Ask(index, ii, nn, num_questions)) {
-        ii = pi[ii - 1];
+
+void Reset(int &round_number, int &num_questions, int cnt, int m) {
+    std::cout << "$ " << cnt << std::endl;
+    ++round_number;
+    if (round_number == m) {
+        exit(0);
     }
-    if (num_questions) {
-        if (Ask(index, ii, nn, num_questions)) {
-            ++ii;
-        }
-        pi[index] = ii;
-        if (ii == nn) {
-            ++cnt;
-        }
-        return true;
-    }
-    return false;
+    num_questions = 5;
 }
 
 
 int main() {
     SetUp();
-    int nn, mm;
-    std::cin >> nn >> mm;
+
+    int n, m;
+    std::cin >> n >> m;
     int cnt = 0;
-    std::vector<int> pi(nn + mm + 1);
+    std::vector<int> pi(n + m + 1, 0);
+    std::unordered_map<std::string, bool> already_asked;
     int round_number = 0;
     int num_questions = 5;
-    for (int index = 1; index < nn + mm + 1; ++index) {
+
+    for (int index = 1; index < n + m + 1; ++index) {
         // ask questions
-        if (index > nn + round_number + 1) {
-            std::cout << "$ " << cnt << std::endl;
-            ++round_number;
-            if (round_number == mm) {
-                return 0;
-            }
-            num_questions = 5;
-        }
         int ii = pi[index - 1];
-        bool step_res = CountStep(ii, index, num_questions, cnt, nn, pi);
-        while (not step_res) {
-            std::cout << "$ " << cnt << std::endl;
-            ++round_number;
-            if (round_number == mm) {
-                return 0;
-            }
-            num_questions = 5;
-            step_res = CountStep(ii, index, num_questions, cnt, nn, pi);
+        if (index > n + round_number + 1) {
+            Reset(round_number, num_questions, cnt, m);
         }
-        // answer in the end of each round
-        if (not num_questions) {
-            std::cout << "$ " << cnt << std::endl;
-            ++round_number;
-            if (round_number == mm) {
-                return 0;
-            }
-            num_questions = 5;
+        while (ii and !Ask(index, ii, n, num_questions, already_asked, round_number, cnt, m)) {
+            ii = pi[ii - 1];
         }
-        if (round_number == mm) {
-            std::cout << "$ " << cnt << std::endl;
-            return 0;
+        if (Ask(index, ii, n, num_questions, already_asked, round_number, cnt, m)) {
+            ++ii;
+        }
+
+        pi[index] = ii;
+        if (ii == n) {
+            ++cnt;
         }
     }
     std::cout << "$ " << cnt << std::endl;
+    return 0;
 }
