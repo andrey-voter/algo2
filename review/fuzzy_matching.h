@@ -25,14 +25,6 @@ private:
 };
 
 namespace traverses {
-
-    template<class Vertex>
-    Vertex PopQueue(std::queue<Vertex> &non_empty_queue) {
-        Vertex vertex = non_empty_queue.front();
-        non_empty_queue.pop();
-        return vertex;
-    }
-
     // Traverses the connected component in a breadth-first order
     // from the vertex 'origin_vertex'.
     // Refer to
@@ -46,7 +38,8 @@ namespace traverses {
         std::queue<Vertex> queue{{origin_vertex}};
 
         while (!queue.empty()) {
-            Vertex vertex = PopQueue(queue);
+            Vertex vertex = queue.front();
+            queue.pop();
             visitor.ExamineVertex(vertex);
 
             for (auto edge: OutgoingEdges(graph, vertex)) {
@@ -104,9 +97,11 @@ namespace aho_corasick {
     // Returns an automaton transition, updates 'node->automaton_transitions_cache'
     // if necessary.
     // Provides constant amortized runtime.
-    AutomatonNode *GetAutomatonTransition(AutomatonNode *node, const AutomatonNode *root, char character) {
+    AutomatonNode *
+    GetAutomatonTransition(AutomatonNode *node, const AutomatonNode *root, char character) {
 
-        if (node->automaton_transitions_cache.find(character) != node->automaton_transitions_cache.end()) {
+        if (node->automaton_transitions_cache.find(character) !=
+            node->automaton_transitions_cache.end()) {
             return node->automaton_transitions_cache.find(character)->second;
         }
 
@@ -155,11 +150,13 @@ namespace aho_corasick {
             return outgoing_edges;
         }
 
-        AutomatonNode *GetTarget(const AutomatonGraph & /*graph*/, const AutomatonGraph::Edge &edge) {
+        AutomatonNode *
+        GetTarget(const AutomatonGraph & /*graph*/, const AutomatonGraph::Edge &edge) {
             return edge.target;
         }
 
-        class SuffixLinkCalculator : public traverses::BfsVisitor<AutomatonNode *, AutomatonGraph::Edge> {
+        class SuffixLinkCalculator
+                : public traverses::BfsVisitor<AutomatonNode *, AutomatonGraph::Edge> {
         public:
             explicit SuffixLinkCalculator(AutomatonNode *root) : root_(root) {}
 
@@ -174,14 +171,16 @@ namespace aho_corasick {
                 if (edge.source == root_) {
                     return;
                 }
-                edge.target->suffix_link = GetAutomatonTransition(edge.source->suffix_link, root_, edge.character);
+                edge.target->suffix_link = GetAutomatonTransition(edge.source->suffix_link, root_,
+                                                                  edge.character);
             }
 
         private:
             AutomatonNode *root_;
         };
 
-        class TerminalLinkCalculator : public traverses::BfsVisitor<AutomatonNode *, AutomatonGraph::Edge> {
+        class TerminalLinkCalculator
+                : public traverses::BfsVisitor<AutomatonNode *, AutomatonGraph::Edge> {
         public:
             explicit TerminalLinkCalculator(AutomatonNode *root) : root_(root) {}
 
@@ -193,7 +192,8 @@ namespace aho_corasick {
                 auto terminated_string_ids_end = node->terminated_string_ids.end();
                 auto suf_terminated_string_ids_begin = node->suffix_link->terminated_string_ids.begin();
                 auto suf_terminated_string_ids_end = node->suffix_link->terminated_string_ids.end();
-                node->terminated_string_ids.insert(terminated_string_ids_end, suf_terminated_string_ids_begin,
+                node->terminated_string_ids.insert(terminated_string_ids_end,
+                                                   suf_terminated_string_ids_begin,
                                                    suf_terminated_string_ids_end);
             }
 
@@ -229,7 +229,7 @@ namespace aho_corasick {
         }
 
         bool operator==(NodeReference other) const {
-            return root_ == other.root_ and node_ == other.node_;
+            return node_ == other.node_;
         }
 
     private:
@@ -324,16 +324,23 @@ namespace aho_corasick {
 template<class Predicate>
 std::vector<std::string> Split(const std::string &string, Predicate is_delimiter) {
     std::vector<std::string> substrings;
-    std::string token;
-    for (char c: string) {
-        if (is_delimiter(c)) {
-            substrings.push_back(token);
-            token = "";
-        } else {
-            token += c;
+    size_t prev_delimiter_index = 0;
+    size_t i = 0;
+    for (; i < string.size(); ++i) {
+        if (is_delimiter(string[i])) {
+            if (i - prev_delimiter_index) {
+                substrings.push_back(string.substr(prev_delimiter_index, i - prev_delimiter_index));
+            } else {
+                substrings.push_back("");
+            }
+            prev_delimiter_index = i + 1;
         }
     }
-    substrings.push_back(token);
+    if (substrings.empty()) {
+        substrings.push_back(string);
+    } else {
+        substrings.push_back(string.substr(prev_delimiter_index, i - prev_delimiter_index));
+    }
     return substrings;
 }
 
@@ -359,7 +366,9 @@ public:
 
     WildcardMatcher static BuildFor(const std::string &pattern, char wildcard) {
         std::vector<std::string> substrings = Split(pattern,
-                                                    [wildcard](char character) { return character == wildcard; });
+                                                    [wildcard](char character) {
+                                                        return character == wildcard;
+                                                    });
         return WildcardMatcher(substrings);
     }
 
@@ -408,12 +417,6 @@ std::string ReadString(std::istream &input_stream) {
     return string;
 }
 
-void SetUp() {
-    std::ios_base::sync_with_stdio(false);
-    std::cin.tie(nullptr);
-    std::cout.tie(nullptr);
-}
-
 // Returns positions of the first character of an every match.
 std::vector<size_t> FindFuzzyMatches(const std::string &pattern_with_wildcards,
                                      const std::string &text, char wildcard) {
@@ -431,8 +434,6 @@ std::vector<size_t> FindFuzzyMatches(const std::string &pattern_with_wildcards,
 }
 
 void Print(const std::vector<size_t> &sequence) {
-    SetUp();
-
     std::cout << sequence.size() << std::endl;
     for (size_t el: sequence) {
         std::cout << el << " ";
